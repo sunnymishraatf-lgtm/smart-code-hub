@@ -1,6 +1,4 @@
-
-# Updated CodeAIPage.jsx - Fully responsive for all devices
-updated_code = '''import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Editor from '@monaco-editor/react'
 import toast from 'react-hot-toast'
@@ -39,7 +37,7 @@ const actions = [
 ]
 
 export default function CodeAIPage() {
-  const [code, setCode] = useState('// Welcome to Smart Code Hub AI!\\n// Describe what you want to build or paste code to fix/explain...')
+  const [code, setCode] = useState('// Welcome to Smart Code Hub AI!\n// Describe what you want to build or paste code to fix/explain...')
   const [language, setLanguage] = useState('javascript')
   const [prompt, setPrompt] = useState('')
   const [action, setAction] = useState('generate')
@@ -49,7 +47,6 @@ export default function CodeAIPage() {
   const [copied, setCopied] = useState(false)
   const [showLangDropdown, setShowLangDropdown] = useState(false)
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 })
-  const [activePanel, setActivePanel] = useState('editor')
   const editorRef = useRef(null)
   const langBtnRef = useRef(null)
 
@@ -57,16 +54,18 @@ export default function CodeAIPage() {
     editorRef.current = editor
   }
 
+  // Calculate dropdown position when opening
   useEffect(() => {
     if (showLangDropdown && langBtnRef.current) {
       const rect = langBtnRef.current.getBoundingClientRect()
       setDropdownPos({
         top: rect.bottom + 8,
-        left: Math.min(rect.left, window.innerWidth - 240)
+        left: rect.left
       })
     }
   }, [showLangDropdown])
 
+  // Close dropdown on Escape key
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape') setShowLangDropdown(false)
@@ -182,79 +181,54 @@ export default function CodeAIPage() {
   const selectedLang = languages.find(l => l.id === language)
 
   return (
-    <div className="pt-14 sm:pt-16 min-h-screen">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
+    <div className="pt-16 min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4 sm:mb-8"
+          className="mb-8"
         >
-          <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-            <div className="p-1.5 sm:p-2 bg-indigo-500/20 rounded-lg">
-              <Code2 className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-400" />
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-indigo-500/20 rounded-lg">
+              <Code2 className="w-6 h-6 text-indigo-400" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">AI Code Assistant</h1>
+            <h1 className="text-3xl font-bold text-white">AI Code Assistant</h1>
           </div>
-          <p className="text-slate-400 text-sm sm:text-base ml-9 sm:ml-11">Generate, fix, and explain code with AI-powered intelligence</p>
+          <p className="text-slate-400 ml-11">Generate, fix, and explain code with AI-powered intelligence</p>
         </motion.div>
 
-        {/* Mobile Tab Switcher - Only visible on small screens */}
-        <div className="lg:hidden flex gap-2 mb-4">
-          <button
-            onClick={() => setActivePanel('editor')}
-            className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all ${
-              activePanel === 'editor'
-                ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
-                : 'bg-slate-800/50 text-slate-400 border border-slate-700/30'
-            }`}
-          >
-            <Code2 className="w-4 h-4 inline mr-2" />
-            Editor
-          </button>
-          <button
-            onClick={() => setActivePanel('output')}
-            className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all ${
-              activePanel === 'output'
-                ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
-                : 'bg-slate-800/50 text-slate-400 border border-slate-700/30'
-            }`}
-          >
-            <Terminal className="w-4 h-4 inline mr-2" />
-            Output & AI
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Left Panel - Editor */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className={`space-y-3 sm:space-y-4 ${activePanel !== 'editor' ? 'hidden lg:block' : ''}`}
+            className="space-y-4"
           >
             {/* Toolbar */}
-            <div className="glass-panel p-2 sm:p-4 flex flex-wrap items-center gap-2 sm:gap-3 relative z-10">
+            <div className="glass-panel p-4 flex flex-wrap items-center gap-3 relative z-10">
               {/* Language Selector */}
               <div className="relative">
                 <button
                   ref={langBtnRef}
                   onClick={() => setShowLangDropdown(!showLangDropdown)}
-                  className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-800/80 hover:bg-slate-700/80 rounded-lg text-xs sm:text-sm text-slate-300 hover:text-white transition-colors border border-slate-700/50"
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/80 rounded-lg text-sm text-slate-300 hover:text-white transition-colors border border-slate-700/50"
                 >
-                  <Languages className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">{selectedLang?.label || 'JavaScript'}</span>
-                  <span className="sm:hidden">{selectedLang?.icon || 'JS'}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-200 ${showLangDropdown ? 'rotate-180' : ''}`} />
+                  <Languages className="w-4 h-4" />
+                  {selectedLang?.label || 'JavaScript'}
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showLangDropdown ? 'rotate-180' : ''}`} />
                 </button>
 
                 <AnimatePresence>
                   {showLangDropdown && (
                     <>
+                      {/* Backdrop to close on outside click */}
                       <div
                         className="fixed inset-0 z-[99998]"
                         onClick={() => setShowLangDropdown(false)}
                       />
+                      {/* Dropdown - FIXED position to escape Monaco's stacking context */}
                       <motion.div
                         initial={{ opacity: 0, y: -8, scale: 0.96 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -265,9 +239,9 @@ export default function CodeAIPage() {
                           top: dropdownPos.top,
                           left: dropdownPos.left,
                         }}
-                        className="w-52 sm:w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl shadow-black/50 z-[99999] overflow-hidden"
+                        className="w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl shadow-black/50 z-[99999] overflow-hidden"
                       >
-                        <div className="max-h-60 sm:max-h-64 overflow-y-auto custom-scrollbar p-1.5">
+                        <div className="max-h-64 overflow-y-auto custom-scrollbar p-1.5">
                           {languages.map((lang) => (
                             <button
                               key={lang.id}
@@ -275,13 +249,13 @@ export default function CodeAIPage() {
                                 setLanguage(lang.id)
                                 setShowLangDropdown(false)
                               }}
-                              className={`w-full text-left px-3 py-2 sm:py-2.5 text-xs sm:text-sm rounded-lg transition-all duration-150 flex items-center gap-2 sm:gap-3 ${
+                              className={`w-full text-left px-3 py-2.5 text-sm rounded-lg transition-all duration-150 flex items-center gap-3 ${
                                 language === lang.id
                                   ? 'text-indigo-400 bg-indigo-500/10 font-medium'
                                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                               }`}
                             >
-                              <span className="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-slate-800 text-xs font-mono font-bold text-slate-500">
+                              <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-slate-800 text-xs font-mono font-bold text-slate-500">
                                 {lang.icon}
                               </span>
                               {lang.label}
@@ -299,23 +273,23 @@ export default function CodeAIPage() {
               {/* Action Buttons */}
               <button
                 onClick={copyCode}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700/50 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700/50 rounded-lg transition-colors"
               >
-                {copied ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
-                <span className="hidden sm:inline">{copied ? 'Copied!' : 'Copy'}</span>
+                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                {copied ? 'Copied!' : 'Copy'}
               </button>
 
               <button
                 onClick={downloadCode}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700/50 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700/50 rounded-lg transition-colors"
               >
-                <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Save</span>
+                <Download className="w-4 h-4" />
+                Save
               </button>
             </div>
 
-            {/* Editor - Responsive height */}
-            <div className="glass-panel overflow-hidden" style={{ height: 'clamp(300px, 50vh, 500px)' }}>
+            {/* Editor */}
+            <div className="glass-panel overflow-hidden" style={{ height: '500px' }}>
               <Editor
                 height="100%"
                 language={language}
@@ -325,23 +299,22 @@ export default function CodeAIPage() {
                 theme="vs-dark"
                 options={{
                   minimap: { enabled: false },
-                  fontSize: 13,
+                  fontSize: 14,
                   fontFamily: 'JetBrains Mono, Fira Code, monospace',
                   lineNumbers: 'on',
                   roundedSelection: false,
                   scrollBeyondLastLine: false,
                   readOnly: false,
                   automaticLayout: true,
-                  padding: { top: 12 },
+                  padding: { top: 16 },
                   folding: true,
                   renderLineHighlight: 'all',
                   matchBrackets: 'always',
                   tabSize: 2,
-                  wordWrap: 'on',
                 }}
                 loading={
                   <div className="flex items-center justify-center h-full text-slate-500">
-                    <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin mr-2" />
+                    <Loader2 className="w-6 h-6 animate-spin mr-2" />
                     Loading editor...
                   </div>
                 }
@@ -352,12 +325,12 @@ export default function CodeAIPage() {
             <button
               onClick={handleRunCode}
               disabled={loading}
-              className="w-full btn-accent flex items-center justify-center gap-2 text-sm sm:text-base py-2.5 sm:py-3"
+              className="w-full btn-accent flex items-center justify-center gap-2"
             >
               {loading && action === 'run' ? (
-                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                <Play className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Play className="w-5 h-5" />
               )}
               Run Code
             </button>
@@ -368,23 +341,23 @@ export default function CodeAIPage() {
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className={`space-y-3 sm:space-y-4 ${activePanel !== 'output' ? 'hidden lg:block' : ''}`}
+            className="space-y-4"
           >
             {/* Prompt Input */}
-            <div className="glass-panel p-4 sm:p-6">
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2 sm:mb-3">
+            <div className="glass-panel p-6">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-3">
                 <MessageSquare className="w-4 h-4 text-indigo-400" />
                 What do you want to do?
               </label>
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="e.g., Create a React component..."
-                className="w-full glass-input min-h-[80px] sm:min-h-[100px] resize-none text-sm"
+                placeholder="e.g., Create a React component with useState hook, or describe the bug you want to fix..."
+                className="w-full glass-input min-h-[100px] resize-none"
               />
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-3 sm:mt-4">
+              <div className="grid grid-cols-3 gap-3 mt-4">
                 {actions.map((act) => {
                   const Icon = act.icon
                   return (
@@ -392,18 +365,18 @@ export default function CodeAIPage() {
                       key={act.id}
                       onClick={() => handleAction(act.id)}
                       disabled={loading}
-                      className={`flex flex-col items-center gap-1.5 sm:gap-2 p-3 sm:p-4 rounded-xl border transition-all duration-300 ${
-                        action === act.id 
-                          ? 'border-indigo-500/50 bg-indigo-500/10 text-white' 
+                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-300 ${
+                        action === act.id
+                          ? 'border-indigo-500/50 bg-indigo-500/10 text-white'
                           : 'border-slate-700/50 bg-slate-800/30 text-slate-400 hover:text-white hover:border-slate-600'
                       }`}
                     >
                       {loading && action === act.id ? (
-                        <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin text-indigo-400" />
+                        <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
                       ) : (
-                        <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                        <Icon className="w-6 h-6" />
                       )}
-                      <span className="text-xs sm:text-sm font-medium">{act.label}</span>
+                      <span className="text-sm font-medium">{act.label}</span>
                     </button>
                   )
                 })}
@@ -411,17 +384,17 @@ export default function CodeAIPage() {
             </div>
 
             {/* Output Panel */}
-            <div className="glass-panel p-4 sm:p-6">
-              <div className="flex items-center gap-2 mb-3 sm:mb-4">
-                <Terminal className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400" />
-                <h3 className="text-base sm:text-lg font-semibold text-white">Output</h3>
+            <div className="glass-panel p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Terminal className="w-5 h-5 text-cyan-400" />
+                <h3 className="text-lg font-semibold text-white">Output</h3>
               </div>
 
-              <div className="bg-slate-950/80 rounded-xl p-3 sm:p-4 min-h-[150px] sm:min-h-[200px] max-h-[250px] sm:max-h-[300px] overflow-auto font-mono text-xs sm:text-sm">
+              <div className="bg-slate-950/80 rounded-xl p-4 min-h-[200px] max-h-[300px] overflow-auto font-mono text-sm">
                 {output ? (
                   <pre className="text-slate-300 whitespace-pre-wrap">{output}</pre>
                 ) : (
-                  <div className="text-slate-600 text-center py-6 sm:py-8">
+                  <div className="text-slate-600 text-center py-8">
                     Output will appear here after running code
                   </div>
                 )}
@@ -435,14 +408,14 @@ export default function CodeAIPage() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="glass-panel p-4 sm:p-6"
+                  className="glass-panel p-6"
                 >
-                  <div className="flex items-center gap-2 mb-3 sm:mb-4">
-                    <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
-                    <h3 className="text-base sm:text-lg font-semibold text-white">Explanation</h3>
+                  <div className="flex items-center gap-2 mb-4">
+                    <BookOpen className="w-5 h-5 text-emerald-400" />
+                    <h3 className="text-lg font-semibold text-white">Explanation</h3>
                   </div>
                   <div className="prose prose-invert prose-sm max-w-none">
-                    <div className="text-slate-300 whitespace-pre-wrap leading-relaxed text-sm">
+                    <div className="text-slate-300 whitespace-pre-wrap leading-relaxed">
                       {explanation}
                     </div>
                   </div>
@@ -455,16 +428,3 @@ export default function CodeAIPage() {
     </div>
   )
 }
-'''
-
-with open("/mnt/agents/output/smart-code-hub/frontend/src/pages/CodeAIPage.jsx", "w") as f:
-    f.write(updated_code)
-
-print("✅ CodeAIPage.jsx updated - fully responsive!")
-print("\n📱 Key mobile changes:")
-print("   - Mobile tab switcher (Editor / Output & AI)")
-print("   - Responsive font sizes and padding")
-print("   - Language dropdown uses fixed positioning")
-print("   - Touch-friendly buttons (min 44px)")
-print("   - Word wrap enabled in editor")
-print("   - Editor height uses clamp() for all screens")
