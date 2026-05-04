@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Editor from '@monaco-editor/react'
 import toast from 'react-hot-toast'
@@ -46,11 +46,33 @@ export default function CodeAIPage() {
   const [explanation, setExplanation] = useState('')
   const [copied, setCopied] = useState(false)
   const [showLangDropdown, setShowLangDropdown] = useState(false)
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 })
   const editorRef = useRef(null)
+  const langBtnRef = useRef(null)
 
   const handleEditorDidMount = (editor) => {
     editorRef.current = editor
   }
+
+  // Calculate dropdown position when opening
+  useEffect(() => {
+    if (showLangDropdown && langBtnRef.current) {
+      const rect = langBtnRef.current.getBoundingClientRect()
+      setDropdownPos({
+        top: rect.bottom + 8,
+        left: rect.left
+      })
+    }
+  }, [showLangDropdown])
+
+  // Close dropdown on Escape key
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') setShowLangDropdown(false)
+    }
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [])
 
   const handleAction = async (actionType) => {
     if (!prompt.trim() && actionType === 'generate') {
@@ -185,42 +207,63 @@ export default function CodeAIPage() {
             className="space-y-4"
           >
             {/* Toolbar */}
-            <div className="glass-panel p-4 flex flex-wrap items-center gap-3">
+            <div className="glass-panel p-4 flex flex-wrap items-center gap-3 relative z-10">
               {/* Language Selector */}
               <div className="relative">
                 <button
+                  ref={langBtnRef}
                   onClick={() => setShowLangDropdown(!showLangDropdown)}
-                  className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 rounded-lg text-sm text-slate-300 hover:text-white transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/80 rounded-lg text-sm text-slate-300 hover:text-white transition-colors border border-slate-700/50"
                 >
                   <Languages className="w-4 h-4" />
                   {selectedLang?.label || 'JavaScript'}
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showLangDropdown ? 'rotate-180' : ''}`} />
                 </button>
 
                 <AnimatePresence>
                   {showLangDropdown && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="absolute top-full left-0 mt-2 min-w-[240px] w-max glass-panel max-h-64 overflow-y-auto z-[99999] p-2"
-                    >
-                      {languages.map((lang) => (
-                        <button
-                          key={lang.id}
-                          onClick={() => {
-                            setLanguage(lang.id)
-                            setShowLangDropdown(false)
-                          }}
-                          className={`w-full text-left px-4 py-2 text-sm whitespace-nowrap flex items-center gap-2 hover:bg-white/5 transition-colors ${
-                            language === lang.id ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-300'
-                          }`}
-                        >
-                          <span className="text-xs font-mono opacity-50 w-6">{lang.icon}</span>
-                          {lang.label}
-                        </button>
-                      ))}
-                    </motion.div>
+                    <>
+                      {/* Backdrop to close on outside click */}
+                      <div
+                        className="fixed inset-0 z-[99998]"
+                        onClick={() => setShowLangDropdown(false)}
+                      />
+                      {/* Dropdown - FIXED position to escape Monaco's stacking context */}
+                      <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                        transition={{ duration: 0.15 }}
+                        style={{
+                          position: 'fixed',
+                          top: dropdownPos.top,
+                          left: dropdownPos.left,
+                        }}
+                        className="w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl shadow-black/50 z-[99999] overflow-hidden"
+                      >
+                        <div className="max-h-64 overflow-y-auto custom-scrollbar p-1.5">
+                          {languages.map((lang) => (
+                            <button
+                              key={lang.id}
+                              onClick={() => {
+                                setLanguage(lang.id)
+                                setShowLangDropdown(false)
+                              }}
+                              className={`w-full text-left px-3 py-2.5 text-sm rounded-lg transition-all duration-150 flex items-center gap-3 ${
+                                language === lang.id
+                                  ? 'text-indigo-400 bg-indigo-500/10 font-medium'
+                                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                              }`}
+                            >
+                              <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-slate-800 text-xs font-mono font-bold text-slate-500">
+                                {lang.icon}
+                              </span>
+                              {lang.label}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    </>
                   )}
                 </AnimatePresence>
               </div>
@@ -230,7 +273,7 @@ export default function CodeAIPage() {
               {/* Action Buttons */}
               <button
                 onClick={copyCode}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-white bg-slate-800/50 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700/50 rounded-lg transition-colors"
               >
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 {copied ? 'Copied!' : 'Copy'}
@@ -238,7 +281,7 @@ export default function CodeAIPage() {
 
               <button
                 onClick={downloadCode}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-white bg-slate-800/50 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700/50 rounded-lg transition-colors"
               >
                 <Download className="w-4 h-4" />
                 Save
@@ -246,7 +289,7 @@ export default function CodeAIPage() {
             </div>
 
             {/* Editor */}
-            <div className="glass-panel relative z-0 h-full" style={{ height: '500px' }}>
+            <div className="glass-panel overflow-hidden" style={{ height: '500px' }}>
               <Editor
                 height="100%"
                 language={language}
@@ -323,8 +366,8 @@ export default function CodeAIPage() {
                       onClick={() => handleAction(act.id)}
                       disabled={loading}
                       className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-300 ${
-                        action === act.id 
-                          ? 'border-indigo-500/50 bg-indigo-500/10 text-white' 
+                        action === act.id
+                          ? 'border-indigo-500/50 bg-indigo-500/10 text-white'
                           : 'border-slate-700/50 bg-slate-800/30 text-slate-400 hover:text-white hover:border-slate-600'
                       }`}
                     >
