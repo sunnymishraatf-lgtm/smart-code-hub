@@ -246,7 +246,7 @@ export default function CodeAIPage() {
             </div>
 
             {/* Editor */}
-            <div className="glass-panel overflow-hidden" style={{ height: '500px' }}>
+            <div className="glass-panel" style={{ height: '500px' }}>
               <Editor
                 height="100%"
                 language={language}
