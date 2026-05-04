@@ -10,7 +10,14 @@ import {
   Type, Square, Circle, Minus, Undo, Download, Maximize2
 } from 'lucide-react'
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000'
+useEffect(() => {
+  const socket = io(import.meta.env.VITE_SOCKET_URL, {
+    transports: ["websocket", "polling"],
+    withCredentials: true
+  });
+
+  return () => socket.disconnect();
+}, []);
 
 const COLORS = [
   '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981',
