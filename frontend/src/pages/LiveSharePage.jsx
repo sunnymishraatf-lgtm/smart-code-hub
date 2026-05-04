@@ -10,14 +10,7 @@ import {
   Type, Square, Circle, Minus, Undo, Download, Maximize2
 } from 'lucide-react'
 
-useEffect(() => {
-  const socket = io(import.meta.env.VITE_SOCKET_URL, {
-    transports: ["websocket", "polling"],
-    withCredentials: true
-  });
-
-  return () => socket.disconnect();
-}, []);
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'https://smart-code-hub.vercel.app'
 
 const COLORS = [
   '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981',
@@ -62,7 +55,10 @@ export default function LiveSharePage() {
   useEffect(() => {
     if (!joined) return
 
-    const newSocket = io(SOCKET_URL)
+    const newSocket = io(SOCKET_URL, {
+      transports: ["websocket", "polling"],
+      withCredentials: true
+    })
     setSocket(newSocket)
 
     newSocket.emit('join-room', roomId || generateRoomId(), {

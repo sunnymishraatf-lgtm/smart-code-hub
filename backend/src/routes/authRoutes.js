@@ -2,21 +2,27 @@ const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+const twilio = require('twilio');
 
 const OTP = require('../models/OTP');
 
+// Initialize clients once
+const transporter = nodemailer.createTransport({
+  service: process.env.EMAIL_SERVICE || 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+const twilioClient = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
+
 // Send OTP via Email (using nodemailer)
 const sendEmailOTP = async (email, otp) => {
-  const nodemailer = require('nodemailer');
-
-  const transporter = nodemailer.createTransporter({
-    service: process.env.EMAIL_SERVICE || 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
-
   const mailOptions = {
     from: process.env.EMAIL_FROM || 'Smart Code Hub <noreply@smartcodehub.com>',
     to: email,
@@ -39,14 +45,7 @@ const sendEmailOTP = async (email, otp) => {
 
 // Send OTP via SMS (using Twilio)
 const sendSMSOTP = async (phone, otp) => {
-  const twilio = require('twilio');
-
-  const client = twilio(
-    process.env.TWILIO_ACCOUNT_SID,
-    process.env.TWILIO_AUTH_TOKEN
-  );
-
-  await client.messages.create({
+  await twilioClient.messages.create({
     body: `Your Smart Code Hub verification code is: ${otp}. Valid for 10 minutes.`,
     from: process.env.TWILIO_PHONE_NUMBER,
     to: phone
