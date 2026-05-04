@@ -203,7 +203,7 @@ export default function CodeAIPage() {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="absolute top-full left-0 mt-2 min-w-[240px] w-max glass-panel max-h-64 overflow-y-auto z-[9999] p-2"
+                      className="absolute top-full left-0 mt-2 min-w-[240px] w-max glass-panel max-h-64 overflow-y-auto z-[99999] p-2"
                     >
                       {languages.map((lang) => (
                         <button
@@ -246,7 +246,7 @@ export default function CodeAIPage() {
             </div>
 
             {/* Editor */}
-            <div className="glass-panel" style={{ height: '500px' }}>
+            <div className="glass-panel relative z-0 h-full" style={{ height: '500px' }}>
               <Editor
                 height="100%"
                 language={language}
