@@ -465,10 +465,10 @@ export default function LiveSharePage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex gap-4 p-4 overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 p-2 md:p-4 overflow-hidden">
         {/* Code Editor */}
         <motion.div 
-          className="flex-1 glass-panel overflow-hidden flex flex-col"
+  className="w-full lg:flex-1 glass-panel overflow-hidden flex flex-col min-h-[300px]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
@@ -510,7 +510,7 @@ export default function LiveSharePage() {
 
         {/* Whiteboard & Chat */}
         <motion.div 
-          className="flex-1 flex flex-col gap-4"
+  className="w-full lg:flex-1 flex flex-col gap-4"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
         >
@@ -587,7 +587,7 @@ export default function LiveSharePage() {
             {showChat && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: '280px' }}
+                animate={{ opacity: 1, height: '40vh' }}
                 exit={{ opacity: 0, height: 0 }}
                 className="glass-panel flex flex-col overflow-hidden"
               >
