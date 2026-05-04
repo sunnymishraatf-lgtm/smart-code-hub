@@ -20,7 +20,10 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://smart-code-hub.vercel.app"
+    ],
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -46,7 +49,10 @@ app.use('/api/', limiter);
 
 // CORS
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+  origin: [
+    "http://localhost:5173",
+    "https://smart-code-hub.vercel.app"
+  ],
   credentials: true
 }));
 
