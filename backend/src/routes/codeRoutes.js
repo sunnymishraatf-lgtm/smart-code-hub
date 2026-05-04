@@ -84,29 +84,28 @@ Provide:
     const response = completion.choices[0].message.content;
 
     // Extract code blocks
-    const codeBlocks = [];
-    const codeRegex = /```(\w+)?
-([\s\S]*?)```/g;
-    let match;
-    while ((match = codeRegex.exec(response)) !== null) {
-      codeBlocks.push({
-        language: match[1] || language,
-        code: match[2].trim()
-      });
-    }
+   const codeBlocks = [];
+const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
+
+let match;
+while ((match = codeRegex.exec(response)) !== null) {
+  codeBlocks.push({
+    language: match[1] || language,
+    code: match[2].trim()
+  });
+}
 
     // Extract explanation (text outside code blocks)
-    let explanation = response.replace(/```(\w+)?
-[\s\S]*?```/g, '').trim();
+    let explanation = response.replace(/```(\w+)?\n[\s\S]*?```/g, '').trim();
 
-    res.json({
-      success: true,
-      response,
-      codeBlocks,
-      explanation,
-      language,
-      action
-    });
+res.json({
+  success: true,
+  response,
+  codeBlocks,
+  explanation,
+  language,
+  action
+});
 
   } catch (error) {
     console.error('OpenAI Error:', error);
