@@ -203,7 +203,7 @@ export default function CodeAIPage() {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="absolute top-full left-0 mt-2 w-48 glass-panel max-h-64 overflow-y-auto z-50"
+                      className="absolute top-full left-0 mt-2 min-w-[240px] w-max glass-panel max-h-64 overflow-y-auto z-[9999] p-2"
                     >
                       {languages.map((lang) => (
                         <button
@@ -212,11 +212,11 @@ export default function CodeAIPage() {
                             setLanguage(lang.id)
                             setShowLangDropdown(false)
                           }}
-                          className={`w-full text-left px-4 py-2 text-sm hover:bg-white/5 transition-colors ${
+                          className={`w-full text-left px-4 py-2 text-sm whitespace-nowrap flex items-center gap-2 hover:bg-white/5 transition-colors ${
                             language === lang.id ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-300'
                           }`}
                         >
-                          <span className="inline-block w-8 text-xs font-mono opacity-50">{lang.icon}</span>
+                          <span className="text-xs font-mono opacity-50 w-6">{lang.icon}</span>
                           {lang.label}
                         </button>
                       ))}
