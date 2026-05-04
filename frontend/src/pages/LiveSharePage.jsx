@@ -7,7 +7,8 @@ import toast from 'react-hot-toast'
 import {
   Users, Copy, Check, Share2, MessageSquare, PenTool, Eraser,
   Trash2, Send, Loader2, ArrowLeft, Palette, MousePointer,
-  Type, Square, Circle, Minus, Undo, Download, Maximize2
+  Type, Square, Circle, Minus, Undo, Download, Maximize2,
+  Code2  // ✅ FIX 1: Added missing Code2 import
 } from 'lucide-react'
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'https://smart-code-hub.vercel.app'
@@ -25,6 +26,9 @@ const TOOLS = [
   { id: 'text', icon: Type, label: 'Text' },
   { id: 'eraser', icon: Eraser, label: 'Eraser' },
 ]
+
+// Shape tools that need a snapshot to prevent ghost rendering
+const SHAPE_TOOLS = ['line', 'rect', 'circle']
 
 export default function LiveSharePage() {
   const { roomId: urlRoomId } = useParams()
@@ -50,6 +54,59 @@ export default function LiveSharePage() {
   const editorRef = useRef(null)
   const chatEndRef = useRef(null)
   const canvasContainerRef = useRef(null)
+  // ✅ FIX 2: Snapshot ref to prevent shape ghost rendering
+  const canvasSnapshotRef = useRef(null)
+
+  // ✅ FIX 3: Wrapped in useCallback so the socket useEffect can safely depend on it
+  const redrawStroke = useCallback((ctx, data) => {
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+
+    if (data.type === 'text') {
+      ctx.font = `${data.fontSize || 20}px sans-serif`
+      ctx.fillStyle = data.color
+      ctx.fillText(data.text, data.x, data.y)
+      return
+    }
+
+    // ✅ FIX 4: Eraser no longer sets a hardcoded color — destination-out handles it
+    if (data.type === 'eraser') {
+      ctx.globalCompositeOperation = 'destination-out'
+      ctx.lineWidth = data.size * 5
+    } else {
+      ctx.globalCompositeOperation = 'source-over'
+      ctx.lineWidth = data.size
+      ctx.strokeStyle = data.color
+    }
+
+    if (data.type === 'line' && data.points.length >= 2) {
+      ctx.beginPath()
+      ctx.moveTo(data.points[0].x, data.points[0].y)
+      ctx.lineTo(data.points[data.points.length - 1].x, data.points[data.points.length - 1].y)
+      ctx.stroke()
+    } else if (data.type === 'rect' && data.points.length >= 2) {
+      const start = data.points[0]
+      const end = data.points[data.points.length - 1]
+      ctx.strokeRect(start.x, start.y, end.x - start.x, end.y - start.y)
+    } else if (data.type === 'circle' && data.points.length >= 2) {
+      const start = data.points[0]
+      const end = data.points[data.points.length - 1]
+      const radius = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2))
+      ctx.beginPath()
+      ctx.arc(start.x, start.y, radius, 0, 2 * Math.PI)
+      ctx.stroke()
+    } else {
+      ctx.beginPath()
+      ctx.moveTo(data.points[0].x, data.points[0].y)
+      for (let i = 1; i < data.points.length; i++) {
+        ctx.lineTo(data.points[i].x, data.points[i].y)
+      }
+      ctx.stroke()
+    }
+
+    // Reset composite operation after eraser
+    ctx.globalCompositeOperation = 'source-over'
+  }, [])
 
   // Initialize socket
   useEffect(() => {
@@ -117,7 +174,7 @@ export default function LiveSharePage() {
     return () => {
       newSocket.close()
     }
-  }, [joined])
+  }, [joined, redrawStroke])
 
   // Auto-scroll chat
   useEffect(() => {
@@ -201,12 +258,21 @@ export default function LiveSharePage() {
     const drawData = {
       type: tool,
       points: [{ x, y }],
-      color: tool === 'eraser' ? '#0f172a' : color,
+      // ✅ FIX 4 cont: Eraser no longer sets a misleading color
+      color: tool === 'eraser' ? null : color,
       size: brushSize,
       userId: socket?.id
     }
 
     canvasRef.current.lastDrawData = drawData
+
+    // ✅ FIX 2: Save canvas snapshot before starting a shape draw
+    if (SHAPE_TOOLS.includes(tool)) {
+      const canvas = canvasRef.current
+      canvasSnapshotRef.current = canvasRef.current
+        .getContext('2d')
+        .getImageData(0, 0, canvas.width, canvas.height)
+    }
   }
 
   const draw = (e) => {
@@ -217,6 +283,12 @@ export default function LiveSharePage() {
     drawData.points.push({ x, y })
 
     const ctx = canvasRef.current.getContext('2d')
+
+    // ✅ FIX 2: Restore snapshot before redrawing shapes to prevent ghost lines
+    if (SHAPE_TOOLS.includes(drawData.type) && canvasSnapshotRef.current) {
+      ctx.putImageData(canvasSnapshotRef.current, 0, 0)
+    }
+
     redrawStroke(ctx, drawData)
 
     // Throttle socket emits
@@ -230,6 +302,8 @@ export default function LiveSharePage() {
       socket?.emit('canvas-draw', canvasRef.current.lastDrawData)
       canvasRef.current.lastDrawData = null
     }
+    // ✅ FIX 2: Clear snapshot when done
+    canvasSnapshotRef.current = null
     setIsDrawing(false)
   }
 
@@ -237,52 +311,6 @@ export default function LiveSharePage() {
     const ctx = canvasRef.current?.getContext('2d')
     if (!ctx) return
     redrawStroke(ctx, data)
-  }
-
-  const redrawStroke = (ctx, data) => {
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-
-    if (data.type === 'text') {
-      ctx.font = `${data.fontSize || 20}px sans-serif`
-      ctx.fillStyle = data.color
-      ctx.fillText(data.text, data.x, data.y)
-      return
-    }
-
-    if (data.type === 'eraser') {
-      ctx.globalCompositeOperation = 'destination-out'
-      ctx.lineWidth = data.size * 5
-    } else {
-      ctx.globalCompositeOperation = 'source-over'
-      ctx.lineWidth = data.size
-      ctx.strokeStyle = data.color
-    }
-
-    if (data.type === 'line' && data.points.length >= 2) {
-      ctx.beginPath()
-      ctx.moveTo(data.points[0].x, data.points[0].y)
-      ctx.lineTo(data.points[data.points.length - 1].x, data.points[data.points.length - 1].y)
-      ctx.stroke()
-    } else if (data.type === 'rect' && data.points.length >= 2) {
-      const start = data.points[0]
-      const end = data.points[data.points.length - 1]
-      ctx.strokeRect(start.x, start.y, end.x - start.x, end.y - start.y)
-    } else if (data.type === 'circle' && data.points.length >= 2) {
-      const start = data.points[0]
-      const end = data.points[data.points.length - 1]
-      const radius = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2))
-      ctx.beginPath()
-      ctx.arc(start.x, start.y, radius, 0, 2 * Math.PI)
-      ctx.stroke()
-    } else {
-      ctx.beginPath()
-      ctx.moveTo(data.points[0].x, data.points[0].y)
-      for (let i = 1; i < data.points.length; i++) {
-        ctx.lineTo(data.points[i].x, data.points[i].y)
-      }
-      ctx.stroke()
-    }
   }
 
   const clearCanvas = () => {
