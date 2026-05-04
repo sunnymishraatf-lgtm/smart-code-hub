@@ -4,7 +4,8 @@ const { body, validationResult } = require('express-validator');
 const OpenAI = require('openai');
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: 'https://api.groq.com/openai/v1'
 });
 
 // Generate code
@@ -72,7 +73,7 @@ Provide:
     }
 
     const completion = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'gpt-4',
+      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
@@ -129,8 +130,9 @@ router.post('/run', [
     // In production, use Docker containers or services like Piston API
     const systemPrompt = `You are a code execution simulator. Given ${language} code and input, show what the output would be. Be precise and show actual output format.`;
 
+    
     const completion = await openai.chat.completions.create({
-      model: process.env.OPENAI_API_KEY ? (process.env.OPENAI_MODEL || 'gpt-4') : 'gpt-3.5-turbo',
+      model: process.env.GROQ_MODEL || 'llama-3.1-8b-instant',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: `Code:
