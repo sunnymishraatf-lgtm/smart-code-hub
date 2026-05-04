@@ -10,8 +10,8 @@ const openai = new OpenAI({
 
 // Generate code
 router.post('/generate', [
-  body('prompt').notEmpty().trim().escape(),
-  body('language').optional().trim().escape(),
+  body('prompt').notEmpty().trim(),
+  body('language').optional().trim(),
   body('action').isIn(['generate', 'fix', 'explain']).optional()
 ], async (req, res) => {
   try {

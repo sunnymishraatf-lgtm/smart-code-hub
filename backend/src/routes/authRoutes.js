@@ -4,6 +4,7 @@ const { body, validationResult } = require('express-validator');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const twilio = require('twilio');
+const jwt = require('jsonwebtoken');
 
 const OTP = require('../models/OTP');
 
@@ -54,7 +55,7 @@ const sendSMSOTP = async (phone, otp) => {
 
 // Generate OTP
 const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return crypto.randomInt(100000, 999999).toString();
 };
 
 // Request OTP
@@ -139,7 +140,6 @@ router.post('/verify-otp', [
     await otpDoc.save();
 
     // Generate JWT token
-    const jwt = require('jsonwebtoken');
     const token = jwt.sign(
       { identifier, type: otpDoc.type },
       process.env.JWT_SECRET,

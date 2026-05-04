@@ -5,6 +5,7 @@ const path = require('path');
 const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
+const crypto = require('crypto');
 
 const File = require('../models/File');
 
@@ -39,7 +40,7 @@ const upload = multer({
 
 // Generate 6-digit OTP
 const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return crypto.randomInt(100000, 999999).toString();
 };
 
 // Upload file
