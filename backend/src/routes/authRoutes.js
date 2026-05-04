@@ -3,26 +3,27 @@ const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const twilio = require('twilio');
 const jwt = require('jsonwebtoken');
 
 const OTP = require('../models/OTP');
 
-// Initialize clients once
-const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+// Initialize email transporter (only when needed)
+let transporter = null;
+
+const getTransporter = () => {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      service: process.env.EMAIL_SERVICE || 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
   }
-});
+  return transporter;
+};
 
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
-
-// Send OTP via Email (using nodemailer)
+// Send OTP via Email only
 const sendEmailOTP = async (email, otp) => {
   const mailOptions = {
     from: process.env.EMAIL_FROM || 'Smart Code Hub <noreply@smartcodehub.com>',
@@ -41,16 +42,7 @@ const sendEmailOTP = async (email, otp) => {
     `
   };
 
-  await transporter.sendMail(mailOptions);
-};
-
-// Send OTP via SMS (using Twilio)
-const sendSMSOTP = async (phone, otp) => {
-  await twilioClient.messages.create({
-    body: `Your Smart Code Hub verification code is: ${otp}. Valid for 10 minutes.`,
-    from: process.env.TWILIO_PHONE_NUMBER,
-    to: phone
-  });
+  await getTransporter().sendMail(mailOptions);
 };
 
 // Generate OTP
@@ -58,10 +50,10 @@ const generateOTP = () => {
   return crypto.randomInt(100000, 999999).toString();
 };
 
-// Request OTP
+// Request OTP (Email only)
 router.post('/request-otp', [
-  body('identifier').notEmpty().trim(),
-  body('type').isIn(['email', 'phone']).optional()
+  body('identifier').notEmpty().trim().isEmail().withMessage('Must be a valid email'),
+  body('type').optional().isIn(['email'])
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -69,28 +61,24 @@ router.post('/request-otp', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { identifier, type = 'email' } = req.body;
+    const { identifier } = req.body;
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Delete existing OTPs for this identifier
-    await OTP.deleteMany({ identifier, type });
+    // Delete existing OTPs for this email
+    await OTP.deleteMany({ identifier, type: 'email' });
 
     // Save new OTP
     const otpDoc = new OTP({
       identifier,
       otp,
-      type,
+      type: 'email',
       expiresAt
     });
     await otpDoc.save();
 
-    // Send OTP
-    if (type === 'email') {
-      await sendEmailOTP(identifier, otp);
-    } else {
-      await sendSMSOTP(identifier, otp);
-    }
+    // Send OTP via Email
+    await sendEmailOTP(identifier, otp);
 
     res.json({
       success: true,

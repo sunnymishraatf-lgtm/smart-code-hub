@@ -10,8 +10,8 @@ const openai = new OpenAI({
 
 // Generate code
 router.post('/generate', [
-  body('prompt').notEmpty().trim(),
-  body('language').optional().trim(),
+  body('prompt').notEmpty().trim().escape(),
+  body('language').optional().trim().escape(),
   body('action').isIn(['generate', 'fix', 'explain']).optional()
 ], async (req, res) => {
   try {
@@ -85,40 +85,45 @@ Provide:
     const response = completion.choices[0].message.content;
 
     // Extract code blocks
-   const codeBlocks = [];
-const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
-
-let match;
-while ((match = codeRegex.exec(response)) !== null) {
-  codeBlocks.push({
-    language: match[1] || language,
-    code: match[2].trim()
-  });
-}
+    const codeBlocks = [];
+    const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    let match;
+    while ((match = codeRegex.exec(response)) !== null) {
+      codeBlocks.push({
+        language: match[1] || language,
+        code: match[2].trim()
+      });
+    }
 
     // Extract explanation (text outside code blocks)
-    let explanation = response.replace(/```(\w+)?\n[\s\S]*?```/g, '').trim();
+    let explanation = response.replace(/```[\s\S]*?```/g, '').trim();
 
-res.json({
-  success: true,
-  response,
-  codeBlocks,
-  explanation,
-  language,
-  action
-});
+    res.json({
+      success: true,
+      response,
+      codeBlocks,
+      explanation,
+      language,
+      action
+    });
 
   } catch (error) {
-    console.error('OpenAI Error:', error);
+    console.error('Groq API Error:', error);
+    
+    // Groq-specific error handling
+    const errorMessage = error.error?.message || error.message || 'Unknown error';
+    const errorType = error.error?.type || error.type || 'api_error';
+    
     res.status(500).json({
       success: false,
       error: 'Failed to generate code. Please try again.',
-      details: error.message
+      details: errorMessage,
+      type: errorType
     });
   }
 });
 
-// Run code (simulated - in production, use a sandboxed environment)
+// Run code (simulated)
 router.post('/run', [
   body('code').notEmpty(),
   body('language').notEmpty()
@@ -126,13 +131,10 @@ router.post('/run', [
   try {
     const { code, language, input = '' } = req.body;
 
-    // For demo purposes, return a simulated output
-    // In production, use Docker containers or services like Piston API
     const systemPrompt = `You are a code execution simulator. Given ${language} code and input, show what the output would be. Be precise and show actual output format.`;
 
-    
     const completion = await openai.chat.completions.create({
-      model: process.env.GROQ_MODEL || 'llama-3.1-8b-instant',
+      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: `Code:
@@ -157,10 +159,13 @@ Show the exact output that would be produced.` }
 
   } catch (error) {
     console.error('Run Code Error:', error);
+    
+    const errorMessage = error.error?.message || error.message || 'Unknown error';
+    
     res.status(500).json({
       success: false,
       error: 'Failed to run code',
-      details: error.message
+      details: errorMessage
     });
   }
 });
