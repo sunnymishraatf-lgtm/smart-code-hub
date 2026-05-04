@@ -1,0 +1,122 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --glass-bg: rgba(15, 23, 42, 0.7);
+    --glass-border: rgba(99, 102, 241, 0.2);
+    --glass-highlight: rgba(99, 102, 241, 0.1);
+    --primary: #6366f1;
+    --primary-light: #818cf8;
+    --accent: #06b6d4;
+  }
+
+  body {
+    @apply bg-slate-950 text-slate-200 antialiased;
+    background-image: 
+      radial-gradient(ellipse at top, rgba(99, 102, 241, 0.15), transparent 50%),
+      radial-gradient(ellipse at bottom, rgba(6, 182, 212, 0.1), transparent 50%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: rgba(99, 102, 241, 0.3);
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply backdrop-blur-xl bg-slate-900/60 border border-indigo-500/20 rounded-2xl;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .glass-input {
+    @apply bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 
+           text-slate-200 placeholder-slate-500 
+           focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20
+           transition-all duration-300;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400
+           text-white font-semibold px-6 py-3 rounded-xl
+           transform hover:scale-[1.02] active:scale-[0.98]
+           transition-all duration-300 shadow-lg shadow-indigo-500/25
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
+  }
+
+  .btn-secondary {
+    @apply bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/50
+           text-slate-200 font-medium px-6 py-3 rounded-xl
+           transform hover:scale-[1.02] active:scale-[0.98]
+           transition-all duration-300
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-accent {
+    @apply bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400
+           text-white font-semibold px-6 py-3 rounded-xl
+           transform hover:scale-[1.02] active:scale-[0.98]
+           transition-all duration-300 shadow-lg shadow-cyan-500/25;
+  }
+
+  .nav-link {
+    @apply relative px-4 py-2 text-sm font-medium text-slate-400 hover:text-white
+           transition-colors duration-300 rounded-lg hover:bg-white/5;
+  }
+
+  .nav-link.active {
+    @apply text-white bg-white/10;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.3);
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.5);
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .glow-text {
+    text-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.loading-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
